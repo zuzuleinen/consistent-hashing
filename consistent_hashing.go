@@ -4,6 +4,7 @@ import (
 	"errors"
 	"hash/fnv"
 	"slices"
+	"sync"
 )
 
 var (
@@ -11,6 +12,7 @@ var (
 )
 
 type ConsistentHashing struct {
+	mu           sync.RWMutex
 	hashToHost   map[uint32]string
 	sortedHashes []uint32
 }
@@ -24,6 +26,9 @@ func NewConsistentHashing() *ConsistentHashing {
 
 // Add a host to the ring
 func (ch *ConsistentHashing) Add(host string) {
+	ch.mu.Lock()
+	defer ch.mu.Unlock()
+
 	hash := ch.Hash(host)
 
 	ch.hashToHost[hash] = host
@@ -37,6 +42,9 @@ func (ch *ConsistentHashing) Add(host string) {
 // Returns the first host clockwise from the key's position on the ring.
 // If there are no hosts on the ring, it returns ErrNoHostsAvailable error
 func (ch *ConsistentHashing) Get(key string) (string, error) {
+	ch.mu.RLock()
+	defer ch.mu.RUnlock()
+
 	if len(ch.sortedHashes) == 0 {
 		return "", ErrNoHostsAvailable
 	}
