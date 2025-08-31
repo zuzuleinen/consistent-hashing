@@ -40,9 +40,16 @@ func (ch *ConsistentHashing) Get(key string) (string, error) {
 		return "", ErrNoHostsAvailable
 	}
 
-	// todo find correct host based on hash
+	hash := ch.Hash(key)
 
-	return "", nil
+	idx, found := slices.BinarySearch(ch.sortedHashes, hash)
+	if !found {
+		idx = 0
+	}
+
+	host := ch.hashToHost[ch.sortedHashes[idx]]
+
+	return host, nil
 }
 
 // Hash returns an uint32 hash based for a key

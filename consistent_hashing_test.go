@@ -45,7 +45,7 @@ func TestGet(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil. got: %v", err)
 	}
-	if matchedHost == "" {
-		t.Errorf("matched host should not be empty")
+	if matchedHost != "host-2" {
+		t.Errorf("matched host expected %s. got %s", "host-2", matchedHost)
 	}
 }
