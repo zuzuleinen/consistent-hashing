@@ -33,8 +33,9 @@ func (ch *ConsistentHashing) Add(host string) {
 	slices.Sort(ch.sortedHashes)
 }
 
-// Get returns the correct host to handle a key
-// If no hosts are available, a ErrNoHostsAvailable is returned
+// Get returns the host for a key using consistent hashing.
+// Returns the first host clockwise from the key's position on the ring.
+// If there are no hosts on the ring, it returns ErrNoHostsAvailable error
 func (ch *ConsistentHashing) Get(key string) (string, error) {
 	if len(ch.sortedHashes) == 0 {
 		return "", ErrNoHostsAvailable
@@ -42,9 +43,10 @@ func (ch *ConsistentHashing) Get(key string) (string, error) {
 
 	hash := ch.Hash(key)
 
-	idx, found := slices.BinarySearch(ch.sortedHashes, hash)
-	if !found {
-		idx = 0
+	// BinarySearch returns (idx, found). If not found, idx is the insertion point.
+	idx, _ := slices.BinarySearch(ch.sortedHashes, hash)
+	if idx == len(ch.sortedHashes) {
+		idx = 0 // wrap around
 	}
 
 	host := ch.hashToHost[ch.sortedHashes[idx]]
