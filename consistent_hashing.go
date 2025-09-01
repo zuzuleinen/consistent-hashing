@@ -33,9 +33,10 @@ func (ch *ConsistentHashing) Add(host string) {
 
 	ch.hashToHost[hash] = host
 
-	// keep hashes sorted for quick find
-	ch.sortedHashes = append(ch.sortedHashes, hash)
-	slices.Sort(ch.sortedHashes)
+	idx, found := slices.BinarySearch(ch.sortedHashes, hash)
+	if !found {
+		ch.sortedHashes = slices.Insert(ch.sortedHashes, idx, hash)
+	}
 }
 
 // Get returns the host for a key using consistent hashing.
