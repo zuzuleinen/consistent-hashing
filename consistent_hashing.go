@@ -2,7 +2,6 @@ package consistent_hashing
 
 import (
 	"errors"
-	"hash/fnv"
 	"slices"
 	"sync"
 )
@@ -11,16 +10,21 @@ var (
 	ErrNoHostsAvailable = errors.New("there are no hosts available")
 )
 
+// HashFunc hashes a key to a value on the ring
+type HashFunc func(key string) uint32
+
 type ConsistentHashing struct {
 	mu           sync.RWMutex
 	hashToHost   map[uint32]string
 	sortedHashes []uint32
+	hash         HashFunc
 }
 
-func NewConsistentHashing() *ConsistentHashing {
+func NewConsistentHashing(hash HashFunc) *ConsistentHashing {
 	return &ConsistentHashing{
 		hashToHost:   make(map[uint32]string),
 		sortedHashes: make([]uint32, 0),
+		hash:         hash,
 	}
 }
 
@@ -29,7 +33,7 @@ func (ch *ConsistentHashing) Add(host string) {
 	ch.mu.Lock()
 	defer ch.mu.Unlock()
 
-	hash := ch.Hash(host)
+	hash := ch.hash(host)
 
 	ch.hashToHost[hash] = host
 
@@ -50,7 +54,7 @@ func (ch *ConsistentHashing) Get(key string) (string, error) {
 		return "", ErrNoHostsAvailable
 	}
 
-	hash := ch.Hash(key)
+	hash := ch.hash(key)
 
 	// BinarySearch returns (idx, found). If not found, idx is the insertion point.
 	idx, _ := slices.BinarySearch(ch.sortedHashes, hash)
@@ -61,11 +65,4 @@ func (ch *ConsistentHashing) Get(key string) (string, error) {
 	host := ch.hashToHost[ch.sortedHashes[idx]]
 
 	return host, nil
-}
-
-// Hash returns an uint32 hash based for a key
-func (ch *ConsistentHashing) Hash(key string) uint32 {
-	h := fnv.New32a()
-	h.Write([]byte(key))
-	return h.Sum32()
 }

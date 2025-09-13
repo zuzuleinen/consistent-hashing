@@ -1,19 +1,28 @@
-package consistent_hashing
+package consistent_hashing_test
 
 import (
 	"errors"
+	"hash/fnv"
 	"testing"
+
+	consistenthashing "consistent-hashing"
 )
 
+func Hash(key string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(key))
+	return h.Sum32()
+}
+
 func TestNewConsistentHashing(t *testing.T) {
-	ch := NewConsistentHashing()
+	ch := consistenthashing.NewConsistentHashing(Hash)
 	if ch == nil {
 		t.Errorf("ch should not be nil")
 	}
 }
 
 func TestAdd(t *testing.T) {
-	ch := NewConsistentHashing()
+	ch := consistenthashing.NewConsistentHashing(Hash)
 
 	ch.Add("host-1")
 	ch.Add("host-2")
@@ -21,20 +30,20 @@ func TestAdd(t *testing.T) {
 }
 
 func TestGetNoHostsAvailable(t *testing.T) {
-	ch := NewConsistentHashing()
+	ch := consistenthashing.NewConsistentHashing(Hash)
 
 	host, err := ch.Get("customer-id-1")
 
 	if host != "" {
 		t.Errorf("host should be empty in case of error. got %s", host)
 	}
-	if !errors.Is(err, ErrNoHostsAvailable) {
-		t.Errorf("error should be: %v", ErrNoHostsAvailable)
+	if !errors.Is(err, consistenthashing.ErrNoHostsAvailable) {
+		t.Errorf("error should be: %v", consistenthashing.ErrNoHostsAvailable)
 	}
 }
 
 func TestGet(t *testing.T) {
-	ch := NewConsistentHashing()
+	ch := consistenthashing.NewConsistentHashing(Hash)
 
 	ch.Add("host-1")
 	ch.Add("host-2")
