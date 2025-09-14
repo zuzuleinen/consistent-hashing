@@ -15,14 +15,18 @@ func Hash(key string) uint32 {
 }
 
 func TestNewConsistentHashing(t *testing.T) {
-	ch := consistenthashing.NewConsistentHashing(Hash)
+	ch := consistenthashing.NewConsistentHashing(
+		consistenthashing.WithHashFunc(Hash),
+	)
 	if ch == nil {
 		t.Errorf("ch should not be nil")
 	}
 }
 
 func TestAdd(t *testing.T) {
-	ch := consistenthashing.NewConsistentHashing(Hash)
+	ch := consistenthashing.NewConsistentHashing(
+		consistenthashing.WithHashFunc(Hash),
+	)
 
 	ch.Add("host-1")
 	ch.Add("host-2")
@@ -30,7 +34,9 @@ func TestAdd(t *testing.T) {
 }
 
 func TestGetNoHostsAvailable(t *testing.T) {
-	ch := consistenthashing.NewConsistentHashing(Hash)
+	ch := consistenthashing.NewConsistentHashing(
+		consistenthashing.WithHashFunc(Hash),
+	)
 
 	host, err := ch.Get("customer-id-1")
 
@@ -43,7 +49,26 @@ func TestGetNoHostsAvailable(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	ch := consistenthashing.NewConsistentHashing(Hash)
+	ch := consistenthashing.NewConsistentHashing(
+		consistenthashing.WithHashFunc(Hash),
+	)
+
+	ch.Add("host-1")
+	ch.Add("host-2")
+	ch.Add("host-3")
+
+	matchedHost, err := ch.Get("customer-id-1")
+
+	if err != nil {
+		t.Errorf("err should be nil. got: %v", err)
+	}
+	if matchedHost != "host-2" {
+		t.Errorf("matched host expected %s. got %s", "host-2", matchedHost)
+	}
+}
+
+func TestNewWithDefaults(t *testing.T) {
+	ch := consistenthashing.NewConsistentHashing()
 
 	ch.Add("host-1")
 	ch.Add("host-2")

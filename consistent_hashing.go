@@ -2,6 +2,7 @@ package consistent_hashing
 
 import (
 	"errors"
+	"hash/fnv"
 	"slices"
 	"sync"
 )
@@ -13,6 +14,15 @@ var (
 // HashFunc hashes a key to a value on the ring
 type HashFunc func(key string) uint32
 
+type Option func(c *ConsistentHashing)
+
+// WithHashFunc allows you to pass a custom hash function
+func WithHashFunc(f HashFunc) Option {
+	return func(c *ConsistentHashing) {
+		c.hash = f
+	}
+}
+
 type ConsistentHashing struct {
 	mu           sync.RWMutex
 	hashToHost   map[uint32]string
@@ -20,12 +30,28 @@ type ConsistentHashing struct {
 	hash         HashFunc
 }
 
-func NewConsistentHashing(hash HashFunc) *ConsistentHashing {
-	return &ConsistentHashing{
+// NewConsistentHashing creates a new *ConsistentHashing
+//
+// If no custom hash function is set via WithHashFunc, 32-bit FNV-1a is used by default.
+func NewConsistentHashing(opts ...Option) *ConsistentHashing {
+	c := &ConsistentHashing{
 		hashToHost:   make(map[uint32]string),
 		sortedHashes: make([]uint32, 0),
-		hash:         hash,
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	if c.hash == nil {
+		c.hash = func(key string) uint32 {
+			h := fnv.New32a()
+			h.Write([]byte(key))
+			return h.Sum32()
+		}
+	}
+
+	return c
 }
 
 // Add a host to the ring
