@@ -24,11 +24,18 @@ func WithHashFunc(f HashFunc) Option {
 	}
 }
 
+func WithReplicationFactor(r int) Option {
+	return func(c *ConsistentHashing) {
+		c.replicationFactor = r
+	}
+}
+
 type ConsistentHashing struct {
-	mu           sync.RWMutex
-	hashToHost   map[uint32]string
-	sortedHashes []uint32
-	hash         HashFunc
+	mu                sync.RWMutex
+	hashToHost        map[uint32]string
+	sortedHashes      []uint32
+	hash              HashFunc
+	replicationFactor int
 }
 
 // NewConsistentHashing creates a new *ConsistentHashing
