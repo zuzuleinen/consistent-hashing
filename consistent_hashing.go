@@ -14,6 +14,7 @@ var (
 // HashFunc hashes a key to a value on the ring
 type HashFunc func(key string) uint32
 
+// Option configures a ConsistentHashing instance
 type Option func(c *ConsistentHashing)
 
 // WithHashFunc allows you to pass a custom hash function
