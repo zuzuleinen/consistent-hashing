@@ -2,6 +2,7 @@ package consistent_hashing_test
 
 import (
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"testing"
 
@@ -81,5 +82,42 @@ func TestNewWithDefaults(t *testing.T) {
 	}
 	if matchedHost != "host-2" {
 		t.Errorf("matched host expected %s. got %s", "host-2", matchedHost)
+	}
+}
+
+func TestWithReplicationFactor(t *testing.T) {
+	tests := []struct {
+		desc               string
+		replicationFactor  int
+		totalPrimaryHosts  int
+		expectedHostsCount int
+	}{
+		{
+			desc:               "by default, hosts count should match number of added hosts",
+			replicationFactor:  0,
+			totalPrimaryHosts:  3,
+			expectedHostsCount: 3,
+		},
+		{
+			desc:               "when replication factor > 0, each primary node gets R - 1 replicas",
+			replicationFactor:  2,
+			totalPrimaryHosts:  3,
+			expectedHostsCount: 2 * 3,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Log(tc.desc)
+
+		ch := consistenthashing.NewConsistentHashing(
+			consistenthashing.WithReplicationFactor(tc.replicationFactor),
+		)
+		for i := range tc.totalPrimaryHosts {
+			ch.Add(fmt.Sprintf("host-%d", i))
+		}
+
+		if ch.HostsCount() != tc.expectedHostsCount {
+			t.Errorf("hosts counts should be %d. got %d", tc.expectedHostsCount, ch.HostsCount())
+		}
 	}
 }

@@ -77,6 +77,14 @@ func (ch *ConsistentHashing) Add(host string) {
 	}
 }
 
+// HostsCount returns the number hosts on the ring
+func (ch *ConsistentHashing) HostsCount() int {
+	ch.mu.RLock()
+	defer ch.mu.RUnlock()
+
+	return len(ch.sortedHashes)
+}
+
 // Get returns the host for a key using consistent hashing.
 // Returns the first host clockwise from the key's position on the ring.
 // If there are no hosts on the ring, it returns ErrNoHostsAvailable error
