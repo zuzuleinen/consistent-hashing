@@ -85,24 +85,24 @@ func TestNewWithDefaults(t *testing.T) {
 	}
 }
 
-func TestWithReplicationFactor(t *testing.T) {
+func TestWithVirtualNodes(t *testing.T) {
 	tests := []struct {
 		name               string
-		replicationFactor  int
+		virtualNodesCount  int
 		totalPrimaryHosts  int
 		expectedHostsCount int
 	}{
 		{
-			name:               "without replication",
-			replicationFactor:  0,
+			name:               "without virtual nodes",
+			virtualNodesCount:  0,
 			totalPrimaryHosts:  3,
 			expectedHostsCount: 3,
 		},
 		{
-			name:               "with replication",
-			replicationFactor:  2,
+			name:               "with virtual nodes",
+			virtualNodesCount:  2,
 			totalPrimaryHosts:  3,
-			expectedHostsCount: 2 * 3,
+			expectedHostsCount: 3 + (3 * 2),
 		},
 	}
 
@@ -111,7 +111,7 @@ func TestWithReplicationFactor(t *testing.T) {
 			t.Parallel()
 
 			ch := consistenthashing.NewConsistentHashing(
-				consistenthashing.WithReplicationFactor(tc.replicationFactor),
+				consistenthashing.WithVirtualNodes(tc.virtualNodesCount),
 			)
 
 			t.Logf("when adding %d hosts", tc.totalPrimaryHosts)

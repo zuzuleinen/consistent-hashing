@@ -2,6 +2,7 @@ package consistent_hashing
 
 import (
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"slices"
 	"sync"
@@ -30,12 +31,22 @@ func WithReplicationFactor(r int) Option {
 	}
 }
 
+// WithVirtualNodes allows you to specify count of virtual nodes to be added
+// Virtual nodes distribute data more evenly across the hash ring by giving each physical host
+// multiple positions, which reduces hotspots and improves load balancing
+func WithVirtualNodes(n int) Option {
+	return func(c *ConsistentHashing) {
+		c.virtualNodesCount = n
+	}
+}
+
 type ConsistentHashing struct {
 	mu                sync.RWMutex
 	hashToHost        map[uint32]string
 	sortedHashes      []uint32
 	hash              HashFunc
 	replicationFactor int
+	virtualNodesCount int
 }
 
 // NewConsistentHashing creates a new *ConsistentHashing
@@ -68,7 +79,15 @@ func (ch *ConsistentHashing) Add(host string) {
 	defer ch.mu.Unlock()
 
 	hash := ch.hash(host)
+	ch.addNodeToRing(hash, host)
 
+	for i := range ch.virtualNodesCount {
+		virtualNodeHash := ch.hash(fmt.Sprintf("%s:%d", host, i))
+		ch.addNodeToRing(virtualNodeHash, host)
+	}
+}
+
+func (ch *ConsistentHashing) addNodeToRing(hash uint32, host string) {
 	ch.hashToHost[hash] = host
 
 	idx, found := slices.BinarySearch(ch.sortedHashes, hash)
