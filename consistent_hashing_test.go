@@ -87,19 +87,19 @@ func TestNewWithDefaults(t *testing.T) {
 
 func TestWithReplicationFactor(t *testing.T) {
 	tests := []struct {
-		desc               string
+		name               string
 		replicationFactor  int
 		totalPrimaryHosts  int
 		expectedHostsCount int
 	}{
 		{
-			desc:               "by default, hosts count should match number of added hosts",
+			name:               "without replication",
 			replicationFactor:  0,
 			totalPrimaryHosts:  3,
 			expectedHostsCount: 3,
 		},
 		{
-			desc:               "when replication factor > 0, each primary node gets R - 1 replicas",
+			name:               "with replication",
 			replicationFactor:  2,
 			totalPrimaryHosts:  3,
 			expectedHostsCount: 2 * 3,
@@ -107,17 +107,21 @@ func TestWithReplicationFactor(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Log(tc.desc)
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-		ch := consistenthashing.NewConsistentHashing(
-			consistenthashing.WithReplicationFactor(tc.replicationFactor),
-		)
-		for i := range tc.totalPrimaryHosts {
-			ch.Add(fmt.Sprintf("host-%d", i))
-		}
+			ch := consistenthashing.NewConsistentHashing(
+				consistenthashing.WithReplicationFactor(tc.replicationFactor),
+			)
 
-		if ch.HostsCount() != tc.expectedHostsCount {
-			t.Errorf("hosts counts should be %d. got %d", tc.expectedHostsCount, ch.HostsCount())
-		}
+			t.Logf("when adding %d hosts", tc.totalPrimaryHosts)
+			for i := range tc.totalPrimaryHosts {
+				ch.Add(fmt.Sprintf("host-%d", i))
+			}
+
+			if ch.HostsCount() != tc.expectedHostsCount {
+				t.Errorf("hosts count(including replicas) should be %d. got %d", tc.expectedHostsCount, ch.HostsCount())
+			}
+		})
 	}
 }
