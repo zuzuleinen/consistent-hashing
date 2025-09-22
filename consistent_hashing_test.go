@@ -39,10 +39,10 @@ func TestGetNoHostsAvailable(t *testing.T) {
 		consistenthashing.WithHashFunc(Hash),
 	)
 
-	host, err := ch.Get("customer-id-1")
+	hosts, err := ch.Get("customer-id-1")
 
-	if host != "" {
-		t.Errorf("host should be empty in case of error. got %s", host)
+	if len(hosts) > 0 {
+		t.Errorf("hosts should be empty in case of error. got %d", len(hosts))
 	}
 	if !errors.Is(err, consistenthashing.ErrNoHostsAvailable) {
 		t.Errorf("error should be: %v", consistenthashing.ErrNoHostsAvailable)
@@ -58,11 +58,16 @@ func TestGet(t *testing.T) {
 	ch.Add("host-2")
 	ch.Add("host-3")
 
-	matchedHost, err := ch.Get("customer-id-1")
+	matchedHosts, err := ch.Get("customer-id-1")
 
+	if len(matchedHosts) != 1 {
+		t.Errorf("count of macthed hosts should be %d. got %d", 1, len(matchedHosts))
+	}
 	if err != nil {
 		t.Errorf("err should be nil. got: %v", err)
 	}
+
+	matchedHost := matchedHosts[0]
 	if matchedHost != "host-2" {
 		t.Errorf("matched host expected %s. got %s", "host-2", matchedHost)
 	}
@@ -75,11 +80,13 @@ func TestNewWithDefaults(t *testing.T) {
 	ch.Add("host-2")
 	ch.Add("host-3")
 
-	matchedHost, err := ch.Get("customer-id-1")
+	matchedHosts, err := ch.Get("customer-id-1")
 
 	if err != nil {
 		t.Errorf("err should be nil. got: %v", err)
 	}
+
+	matchedHost := matchedHosts[0]
 	if matchedHost != "host-2" {
 		t.Errorf("matched host expected %s. got %s", "host-2", matchedHost)
 	}
@@ -124,4 +131,64 @@ func TestWithVirtualNodes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWithReplicationEqualWithNumberOfHosts(t *testing.T) {
+	ch := consistenthashing.NewConsistentHashing(consistenthashing.WithReplicationFactor(3))
+
+	ch.Add("host-1")
+	ch.Add("host-2")
+	ch.Add("host-3")
+
+	matchedHosts, err := ch.Get("some-key")
+	if err != nil {
+		t.Errorf("err should be nil. got: %v", err)
+	}
+
+	expectedMatchedHosts := 3
+	if len(matchedHosts) != expectedMatchedHosts {
+		t.Errorf("matched hosts count should be %d. got %d", expectedMatchedHosts, len(matchedHosts))
+	}
+}
+
+func TestWithReplicationBiggerThanNumberOfHosts(t *testing.T) {
+	ch := consistenthashing.NewConsistentHashing(consistenthashing.WithReplicationFactor(100))
+
+	ch.Add("host-1")
+	ch.Add("host-2")
+	ch.Add("host-3")
+
+	matchedHosts, err := ch.Get("some-key")
+	if err != nil {
+		t.Errorf("err should be nil. got: %v", err)
+	}
+
+	expectedMatchedHosts := 3
+	if len(matchedHosts) != expectedMatchedHosts {
+		t.Errorf("matched hosts count should be %d. got %d", expectedMatchedHosts, len(matchedHosts))
+	}
+}
+
+func TestWithReplicationLessThanNumberOfHosts(t *testing.T) {
+	ch := consistenthashing.NewConsistentHashing(consistenthashing.WithReplicationFactor(3))
+
+	ch.Add("host-1")
+	ch.Add("host-2")
+	ch.Add("host-3")
+	ch.Add("host-4")
+	ch.Add("host-5")
+	ch.Add("host-6")
+	ch.Add("host-7")
+
+	matchedHosts, err := ch.Get("some-key")
+	if err != nil {
+		t.Errorf("err should be nil. got: %v", err)
+	}
+
+	expectedMatchedHosts := 3
+	if len(matchedHosts) != expectedMatchedHosts {
+		t.Errorf("matched hosts count should be %d. got %d", expectedMatchedHosts, len(matchedHosts))
+	}
+
+	// todo make above 3 into a tablle driven test
 }

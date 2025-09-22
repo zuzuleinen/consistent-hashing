@@ -47,6 +47,8 @@ type ConsistentHashing struct {
 	hash              HashFunc
 	replicationFactor int
 	virtualNodesCount int
+	// primaryNodes is a unique list of main hosts names
+	primaryNodes []string
 }
 
 // NewConsistentHashing creates a new *ConsistentHashing
@@ -80,7 +82,9 @@ func (ch *ConsistentHashing) Add(host string) {
 
 	hash := ch.hash(host)
 	ch.addNodeToRing(hash, host)
+	ch.primaryNodes = append(ch.primaryNodes, host)
 
+	// add virtual nodes
 	for i := range ch.virtualNodesCount {
 		virtualNodeHash := ch.hash(fmt.Sprintf("%s:%d", host, i))
 		ch.addNodeToRing(virtualNodeHash, host)
@@ -107,12 +111,12 @@ func (ch *ConsistentHashing) HostsCount() int {
 // Get returns the host for a key using consistent hashing.
 // Returns the first host clockwise from the key's position on the ring.
 // If there are no hosts on the ring, it returns ErrNoHostsAvailable error
-func (ch *ConsistentHashing) Get(key string) (string, error) {
+func (ch *ConsistentHashing) Get(key string) ([]string, error) {
 	ch.mu.RLock()
 	defer ch.mu.RUnlock()
 
 	if len(ch.sortedHashes) == 0 {
-		return "", ErrNoHostsAvailable
+		return nil, ErrNoHostsAvailable
 	}
 
 	hash := ch.hash(key)
@@ -125,5 +129,25 @@ func (ch *ConsistentHashing) Get(key string) (string, error) {
 
 	host := ch.hashToHost[ch.sortedHashes[idx]]
 
-	return host, nil
+	addedHosts := make(map[string]bool)
+
+	matchedHosts := []string{host}
+	addedHosts[host] = true
+
+	if ch.replicationFactor > 1 {
+		replicationFactor := min(ch.replicationFactor, len(ch.primaryNodes)) // cap replication to len of distinct nodes
+
+		for len(addedHosts) != replicationFactor {
+			idx = (idx + 1) % len(ch.sortedHashes)
+
+			hostToAdd := ch.hashToHost[ch.sortedHashes[idx]]
+
+			if _, ok := addedHosts[hostToAdd]; !ok {
+				matchedHosts = append(matchedHosts, hostToAdd)
+				addedHosts[hostToAdd] = true
+			}
+		}
+	}
+
+	return matchedHosts, nil
 }
