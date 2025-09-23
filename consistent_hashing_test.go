@@ -133,62 +133,52 @@ func TestWithVirtualNodes(t *testing.T) {
 	}
 }
 
-func TestWithReplicationEqualWithNumberOfHosts(t *testing.T) {
-	ch := consistenthashing.NewConsistentHashing(consistenthashing.WithReplicationFactor(3))
-
-	ch.Add("host-1")
-	ch.Add("host-2")
-	ch.Add("host-3")
-
-	matchedHosts, err := ch.Get("some-key")
-	if err != nil {
-		t.Errorf("err should be nil. got: %v", err)
+func TestWithReplication(t *testing.T) {
+	tests := []struct {
+		name                 string
+		replicationFactor    int
+		totalPrimaryHosts    int
+		expectedMatchedHosts int
+	}{
+		{
+			name:                 "with replication factor = primary hosts count",
+			replicationFactor:    3,
+			totalPrimaryHosts:    3,
+			expectedMatchedHosts: 3,
+		},
+		{
+			name:                 "with replication factor > primary hosts count",
+			replicationFactor:    100,
+			totalPrimaryHosts:    3,
+			expectedMatchedHosts: 3,
+		},
+		{
+			name:                 "with replication factor < primary hosts count",
+			replicationFactor:    3,
+			totalPrimaryHosts:    7,
+			expectedMatchedHosts: 3,
+		},
 	}
 
-	expectedMatchedHosts := 3
-	if len(matchedHosts) != expectedMatchedHosts {
-		t.Errorf("matched hosts count should be %d. got %d", expectedMatchedHosts, len(matchedHosts))
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			ch := consistenthashing.NewConsistentHashing(consistenthashing.WithReplicationFactor(tc.replicationFactor))
+
+			for i := range tc.totalPrimaryHosts {
+				ch.Add(fmt.Sprintf("host-%d", i))
+			}
+
+			matchedHosts, err := ch.Get("some-key")
+			if err != nil {
+				t.Errorf("err should be nil. got: %v", err)
+			}
+
+			expectedMatchedHosts := tc.expectedMatchedHosts
+			if len(matchedHosts) != expectedMatchedHosts {
+				t.Errorf("matched hosts count should be %d. got %d", expectedMatchedHosts, len(matchedHosts))
+			}
+		})
 	}
-}
-
-func TestWithReplicationBiggerThanNumberOfHosts(t *testing.T) {
-	ch := consistenthashing.NewConsistentHashing(consistenthashing.WithReplicationFactor(100))
-
-	ch.Add("host-1")
-	ch.Add("host-2")
-	ch.Add("host-3")
-
-	matchedHosts, err := ch.Get("some-key")
-	if err != nil {
-		t.Errorf("err should be nil. got: %v", err)
-	}
-
-	expectedMatchedHosts := 3
-	if len(matchedHosts) != expectedMatchedHosts {
-		t.Errorf("matched hosts count should be %d. got %d", expectedMatchedHosts, len(matchedHosts))
-	}
-}
-
-func TestWithReplicationLessThanNumberOfHosts(t *testing.T) {
-	ch := consistenthashing.NewConsistentHashing(consistenthashing.WithReplicationFactor(3))
-
-	ch.Add("host-1")
-	ch.Add("host-2")
-	ch.Add("host-3")
-	ch.Add("host-4")
-	ch.Add("host-5")
-	ch.Add("host-6")
-	ch.Add("host-7")
-
-	matchedHosts, err := ch.Get("some-key")
-	if err != nil {
-		t.Errorf("err should be nil. got: %v", err)
-	}
-
-	expectedMatchedHosts := 3
-	if len(matchedHosts) != expectedMatchedHosts {
-		t.Errorf("matched hosts count should be %d. got %d", expectedMatchedHosts, len(matchedHosts))
-	}
-
-	// todo make above 3 into a tablle driven test
 }
