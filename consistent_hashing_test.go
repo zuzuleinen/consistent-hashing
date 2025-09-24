@@ -182,3 +182,20 @@ func TestWithReplication(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveHost(t *testing.T) {
+	ch := consistenthashing.NewConsistentHashing()
+	initialHostsCount := 3
+
+	for i := range initialHostsCount {
+		ch.Add(fmt.Sprintf("host-%d", i))
+	}
+	if ch.HostsCount() != initialHostsCount {
+		t.Errorf("host count should be %d. got %d", initialHostsCount, ch.HostsCount())
+	}
+
+	ch.Remove("host-0")
+	if ch.HostsCount() != initialHostsCount-1 {
+		t.Errorf("host count should be %d. got %d", initialHostsCount-1, ch.HostsCount())
+	}
+}

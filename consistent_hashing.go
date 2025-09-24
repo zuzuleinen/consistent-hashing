@@ -92,6 +92,22 @@ func (ch *ConsistentHashing) Add(host string) {
 	}
 }
 
+// Remove removes a host from the ring including its virtual nodes
+func (ch *ConsistentHashing) Remove(host string) {
+	ch.mu.Lock()
+	defer ch.mu.Unlock()
+
+	hash := ch.hash(host)
+	ch.removeNodeFromRing(hash)
+
+	delete(ch.primaryNodes, host)
+
+	for i := range ch.virtualNodesCount {
+		virtualNodeHash := ch.hash(fmt.Sprintf("%s:%d", host, i))
+		ch.removeNodeFromRing(virtualNodeHash)
+	}
+}
+
 func (ch *ConsistentHashing) addNodeToRing(hash uint32, host string) {
 	ch.hashToHost[hash] = host
 
@@ -99,6 +115,14 @@ func (ch *ConsistentHashing) addNodeToRing(hash uint32, host string) {
 	if !found {
 		ch.sortedHashes = slices.Insert(ch.sortedHashes, idx, hash)
 	}
+}
+
+func (ch *ConsistentHashing) removeNodeFromRing(hash uint32) {
+	delete(ch.hashToHost, hash)
+
+	ch.sortedHashes = slices.DeleteFunc(ch.sortedHashes, func(u uint32) bool {
+		return u == hash
+	})
 }
 
 // HostsCount returns the number hosts on the ring
