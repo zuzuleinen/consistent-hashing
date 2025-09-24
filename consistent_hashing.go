@@ -25,6 +25,8 @@ func WithHashFunc(f HashFunc) Option {
 	}
 }
 
+// WithReplicationFactor allows you to pass a replication factor
+// When R > 1 a key will be saved in R distinct nodes instead of just one
 func WithReplicationFactor(r int) Option {
 	return func(c *ConsistentHashing) {
 		c.replicationFactor = r
