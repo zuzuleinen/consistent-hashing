@@ -126,8 +126,8 @@ func TestWithVirtualNodes(t *testing.T) {
 				ch.Add(fmt.Sprintf("host-%d", i))
 			}
 
-			if ch.HostsCount() != tc.expectedHostsCount {
-				t.Errorf("hosts count(including replicas) should be %d. got %d", tc.expectedHostsCount, ch.HostsCount())
+			if ch.RingSize() != tc.expectedHostsCount {
+				t.Errorf("ring size should be %d. got %d", tc.expectedHostsCount, ch.RingSize())
 			}
 		})
 	}
@@ -190,12 +190,31 @@ func TestRemoveHost(t *testing.T) {
 	for i := range initialHostsCount {
 		ch.Add(fmt.Sprintf("host-%d", i))
 	}
-	if ch.HostsCount() != initialHostsCount {
-		t.Errorf("host count should be %d. got %d", initialHostsCount, ch.HostsCount())
+	if ch.RingSize() != initialHostsCount {
+		t.Errorf("host count should be %d. got %d", initialHostsCount, ch.RingSize())
 	}
 
 	ch.Remove("host-0")
-	if ch.HostsCount() != initialHostsCount-1 {
-		t.Errorf("host count should be %d. got %d", initialHostsCount-1, ch.HostsCount())
+	if ch.RingSize() != initialHostsCount-1 {
+		t.Errorf("host count should be %d. got %d", initialHostsCount-1, ch.RingSize())
 	}
+}
+
+func TestRemoveHostWithVirtualNodes(t *testing.T) {
+	ch := consistenthashing.NewConsistentHashing(consistenthashing.WithVirtualNodes(3))
+	initialHostsCount := 3
+
+	for i := range initialHostsCount {
+		ch.Add(fmt.Sprintf("host-%d", i))
+	}
+	if ch.RingSize() != initialHostsCount+(initialHostsCount*3) {
+		t.Errorf("host count should be %d. got %d", initialHostsCount+(initialHostsCount*3), ch.RingSize())
+	}
+
+	ch.Remove("host-0")
+	if ch.RingSize() != initialHostsCount+(initialHostsCount*3)-4 {
+		t.Errorf("host count should be %d. got %d", initialHostsCount+(initialHostsCount*3)-4, ch.RingSize())
+	}
+
+	// todo: this and above move in table-driven tests
 }

@@ -127,8 +127,8 @@ func (ch *ConsistentHashing) removeNodeFromRing(hash uint32) {
 	})
 }
 
-// HostsCount returns the number hosts on the ring
-func (ch *ConsistentHashing) HostsCount() int {
+// RingSize returns the number of ring positions (physical + virtual nodes)
+func (ch *ConsistentHashing) RingSize() int {
 	ch.mu.RLock()
 	defer ch.mu.RUnlock()
 
