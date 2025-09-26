@@ -16,3 +16,17 @@ Then use it in your project:
 ```go
 import "github.com/zuzuleinen/consistent-hashing"
 ```
+
+## Usage 
+
+Simple usage:
+
+```go
+	ch := consistenthashing.NewConsistentHashing()
+
+	ch.Add("host-1")
+	ch.Add("host-2")
+	ch.Add("host-3")
+
+	matchedHosts, err := ch.Get("customer-id-1")
+```
