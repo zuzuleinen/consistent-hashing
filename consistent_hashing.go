@@ -50,7 +50,7 @@ type ConsistentHashing struct {
 	replicationFactor int
 	virtualNodesCount int
 	// primaryNodes is a unique list of main hosts names
-	primaryNodes map[string]bool
+	primaryNodes map[string]struct{}
 }
 
 // NewConsistentHashing creates a new *ConsistentHashing
@@ -60,7 +60,7 @@ func NewConsistentHashing(opts ...Option) *ConsistentHashing {
 	c := &ConsistentHashing{
 		hashToHost:   make(map[uint32]string),
 		sortedHashes: make([]uint32, 0),
-		primaryNodes: make(map[string]bool),
+		primaryNodes: make(map[string]struct{}),
 	}
 
 	for _, opt := range opts {
@@ -85,7 +85,7 @@ func (ch *ConsistentHashing) Add(host string) {
 
 	hash := ch.hash(host)
 	ch.addNodeToRing(hash, host)
-	ch.primaryNodes[host] = true
+	ch.primaryNodes[host] = struct{}{}
 
 	// add virtual nodes
 	for i := range ch.virtualNodesCount {
