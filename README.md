@@ -30,3 +30,5 @@ Simple usage:
 
 	matchedHosts, err := ch.Get("customer-id-1")
 ```
+
+If `ch` is constructed without any options, it will always match exactly one host.
