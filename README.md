@@ -19,7 +19,7 @@ import "github.com/zuzuleinen/consistent-hashing"
 
 ## Usage 
 
-Simple usage:
+### Simple usage:
 
 ```go
 	ch := consistenthashing.NewConsistentHashing()
@@ -33,7 +33,7 @@ Simple usage:
 
 If `ch` is constructed without any options, it will always match exactly one host.
 
-Enable virtual nodes:
+### Enable virtual nodes:
 
 ```go
     ch := consistenthashing.NewConsistentHashing(
@@ -44,7 +44,7 @@ Enable virtual nodes:
 In this case, each primary host receives `100` virtual nodes each. 
 
 
-Enable replication:
+### Enable replication:
 
 ```go
 		ch := consistenthashing.NewConsistentHashing(
