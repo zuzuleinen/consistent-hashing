@@ -64,7 +64,9 @@ In this case, each primary host receives `100` virtual nodes each.
 ```
 
 `WithReplicationFactor` allows you to pass a replication factor `R`. 
+
 When `R > 1` a key will be saved in `R` matchedHosts nodes instead of just one. In our example `len(matchedHosts) == 2`.
+
 When `R` is bigger than the number of primary hosts, it will be capped to nr. of primary hosts.
 
 ### Customize hash function
