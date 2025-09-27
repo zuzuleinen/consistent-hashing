@@ -67,6 +67,16 @@ In this case, each primary host receives `100` virtual nodes each.
 When `R > 1` a key will be saved in `R` matchedHosts nodes instead of just one. In our example `len(matchedHosts) == 2`.
 When `R` is bigger than the number of primary hosts, it will be capped to nr. of primary hosts.
 
+### Customize hash function
+
+By default, the library uses a  **32 bit FNV-1a** by default, but you can use your own custom function using:
+
+```go
+	ch := consistenthashing.NewConsistentHashing(
+		consistenthashing.WithHashFunc(YourCustomHashFunction),
+	)
+```
+
 ## Contributing
 
 Feel free to [open an issue](https://github.com/zuzuleinen/consistent-hashing/issues/new) or e-mail me at andrey.boar[at]gmail.com.
