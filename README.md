@@ -19,7 +19,7 @@ import "github.com/zuzuleinen/consistent-hashing"
 
 ## Usage 
 
-### Simple usage:
+### Basic usage:
 
 ```go
 	ch := consistenthashing.NewConsistentHashing()
