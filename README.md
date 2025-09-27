@@ -52,15 +52,15 @@ In this case, each primary host receives `100` virtual nodes each.
 ### Enable replication:
 
 ```go
-		ch := consistenthashing.NewConsistentHashing(
-			consistenthashing.WithReplicationFactor(2),
-		)
+    ch := consistenthashing.NewConsistentHashing(
+        consistenthashing.WithReplicationFactor(2),
+    )
 
-        ch.Add("host-1")
-        ch.Add("host-2")
-        ch.Add("host-3")
+    ch.Add("host-1")
+    ch.Add("host-2")
+    ch.Add("host-3")
 
-        matchedHosts, err := ch.Get("customer-id-1")
+    matchedHosts, err := ch.Get("customer-id-1")
 ```
 
 `WithReplicationFactor` allows you to pass a replication factor `R`. 
