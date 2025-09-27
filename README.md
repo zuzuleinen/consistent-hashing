@@ -7,7 +7,7 @@ with support for **replication** and **virtual nodes**.
 <img src="img.png" width="300" />
 </p>
 
-Check this [video](https://www.youtube.com/watch?v=vccwdhfqIrI) to learn about Consistent Hashing.
+Check out this [video](https://www.youtube.com/watch?v=vccwdhfqIrI) to learn about Consistent Hashing.
 
 
 ## Installation
