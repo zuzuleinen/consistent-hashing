@@ -5,6 +5,8 @@ with support for **replication** and **virtual nodes**.
 
 Check this [video](https://www.youtube.com/watch?v=vccwdhfqIrI) to learn about Consistent Hashing.
 
+![img.png](img.png)
+
 ## Installation
 
 ```bash
